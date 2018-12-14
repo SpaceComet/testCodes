@@ -29,22 +29,23 @@
 static HANDLE mainTaskHandle = NULL;
 static HANDLE secondTaskHandle = NULL;
 
-/*void blinkD(UINT32 t, int nBlink){
-    UINT32 counter = 0;
-    UINT32 nDelay = t/nBlink;
-    int ledVal = 0;
+//convert unit ddmm.mmmm to degree(°) 
+double convertCoordinates(double nmeaValue, double nmeaScale){
+    double  tmp = nmeaValue/nmeaScale/100.0;
+    int     dd  = (int)tmp;
+    double  mm  = (tmp - dd) * 100.0 / 60.0;
 
-    while (counter <= t){
+    tmp = dd+mm;
 
-    }
+    if (tmp < 0) tmp*=-1;
 
-}*/
-
+    return(tmp);
+}
 
 void EventDispatch(API_Event_t* pEvent){
     switch(pEvent->id){
         case API_EVENT_ID_GPS_UART_RECEIVED:
-            Trace(1,"#LOG: received GPS data,length:%d, data:%s",pEvent->param1,pEvent->pParam1);
+            //Trace(1,"#LOG: received GPS data,length:%d, data:%s",pEvent->param1,pEvent->pParam1);
             GPS_Update(pEvent->pParam1,pEvent->param1);
             break;
         default:
@@ -78,23 +79,33 @@ void SecondTask(void *pData){
 
     Trace(1, "#LOG: init gps...");
 
+    // Open GPS hardware(UART2 open either)
+    GPS_Init();
+    GPS_Open(NULL);
+
     if(!GPS_GetVersion(buffer,150))
         Trace(1,"#LOG: get gps firmware version fail");
     else
         Trace(1,"#LOG: gps firmware version:%s",buffer);
 
-    //open GPS hardware(UART2 open either)
-    GPS_Init();
-    GPS_Open(NULL);
-
-    //wait for gps start up, or gps will not response command
+    // Wait for gps start up, or gps will not response command
     while(gpsInfo->rmc.latitude.value == 0){
         GPIO_SetLevel(gpioLedBlue, GPIO_LEVEL_HIGH);
         OS_Sleep(500);
         GPIO_SetLevel(gpioLedBlue, GPIO_LEVEL_LOW);
         OS_Sleep(500);
 
-        Trace(1, "#LOG: waiting...");
+        Trace(1, "#LOG: GPS starting up...");
+    }
+
+    while(1){
+
+        // Convert the coordinates
+        double latitude =  convertCoordinates(gpsInfo->rmc.latitude.value, gpsInfo->rmc.latitude.scale);
+        double longitude =  convertCoordinates(gpsInfo->rmc.longitude.value, gpsInfo->rmc.longitude.scale);
+
+        Trace(1, "#LOG: (%f N %f W)", latitude, longitude);
+        OS_Sleep(5000);
     }
 }
 
