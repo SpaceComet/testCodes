@@ -1,6 +1,6 @@
 /*
-    Basic and documented code that print messages
-    int the tracer and blink the leds in the chip
+    Basic and documented code that print the
+    current position GPS
 
     More info: https://ai-thinker-open.github.io/GPRS_C_SDK_DOC/en/c-sdk/first-code.html
 */
