@@ -5,7 +5,7 @@
  * @Author: Ricx8 
  * @Date: 2019-01-10 23:27:26 
  * @Last Modified by: Ricx8
- * @Last Modified time: 2018-06-12 18:05:00
+ * @Last Modified time: 2019-01-15 02:09:20
  */
 
 
@@ -23,7 +23,9 @@
 #define SERVER_IP           "caracascoder.com"
 #define SERVER_PORT         443
 #define SSL_SERVER_PORT     "443"
-#define SERVER_PATH         "/test/setLocation.php?location=A9G:443_v07"
+#define SERVER_PATH         "/test/setLocation.php?location=A9G:443_v17"
+#define SERVER_PATH_POST    "/test/setLocationPOST.php"
+#define SERVER_DATA         "\r\nlocation=A9G_POST_v17"
 /*******************************************************************/
 
 const char* ca_cert = "-----BEGIN CERTIFICATE-----\n\
@@ -32,12 +34,12 @@ MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQD\n\
 ExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMzAeFw0xODEyMDUwNTQyMjRaFw0x\n\
 OTAzMDUwNTQyMjRaMBsxGTAXBgNVBAMTEGNhcmFjYXNjb2Rlci5jb20wggEiMA0G\n\
 CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC65kt6A41pEicBD1xzlHRmZU3DfZcB\n\
-lp8D/xLI2ye0uEKX4qexrsuUycyUnAu6RTUHs6zb5dgXdYHUyQj6cUhq/bDn1td8\n\
+lp8D/xLI2ye0uEKX4qexrsuUycyUnAu6RTUHs6zb5dnXdYHUyQj6cUhq/bDn1td8\n\
 rpj3+m1tSAXSIFEoxG+oT9w+HbjGO6chitI07k7pR5UVwXNVuzEO1Oq3PqBrYK6I\n\
 5EEjmW3ABS2NZlgAF/xaDHGaLswrOnbouT+tkrnGN74FRc6prNw5e+dBcdhJpu16\n\
 9OqfrZo1/e8qLC3knuGBPJtY1m09vYlyMq/acW2G4b+6bLsdWHohPOijDxVvxy/X\n\
 NG7W6/EkebsImS3UfiMCqnredmiI2TZs10dRHE2j7FBO3zvNfMaCmuzDAgMBAAGj\n\
-ggJ5MIICdTAOBgNVHQ8BAf8EBAMCBbAwHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsG\n\
+ggJ5MIICdTAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0lBBYwFAYIKwYBBQUHAwEGCCsG\n\
 AQUFBwMCMAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFFzYUb1zmdjpUc7mi4+pxv83\n\
 Nl+zMB8GA1UdIwQYMBaAFKhKamMEfd265tE5t6ZFZe/zqOyhMG8GCCsGAQUFBwEB\n\
 BGMwYTAuBggrBgEFBQcwAYYiaHR0cDovL29jc3AuaW50LXgzLmxldHNlbmNyeXB0\n\
@@ -140,7 +142,7 @@ void EventDispatch(API_Event_t* pEvent)
 }
 
 
-//http get with no header
+//https GET 
 int Https_Get(const char* domain, int port,const char* path, char* retBuffer, int* bufferLen){
     uint8_t ip[16];
     uint8_t buffer[2048];
@@ -213,9 +215,82 @@ int Https_Get(const char* domain, int port,const char* path, char* retBuffer, in
     return 0;
 }
 
+//https POST
+int Https_Post(const char* domain, int port,const char* path, const char* data, uint16_t dataLen, char* retBuffer, int* bufferLen){
+    uint8_t ip[16];
+    uint8_t buffer[2048];
+    int retBufferLen = *bufferLen;
+    int ret;
+    SSL_Error_t error;
+    SSL_Config_t config = {
+        .caCert = ca_cert,
+        .caCrl  = NULL,
+        .clientCert = NULL,
+        .clientKey  = NULL,
+        .clientKeyPasswd = NULL,
+        .hostName   = SERVER_IP,
+        .minVersion = SSL_VERSION_SSLv3,
+        .maxVersion = SSL_VERSION_TLSv1_2,
+        .verifyMode = SSL_VERIFY_MODE_OPTIONAL,
+        .entropyCustom = "GPRS"
+    };
 
-void Socket_BIO_Test()
-{
+    //connect server
+    memset(ip,0,sizeof(ip));
+    if(DNS_GetHostByName2(domain,ip) != 0){
+        Trace(1,"get ip error");
+        return -1;
+    }
+    Trace(1,"get ip success:%s -> %s",domain,ip);
+
+    char* servInetAddr = ip;
+    snprintf(retBuffer,retBufferLen,"POST %s HTTP/1.1\r\nHost: %s\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\n%s\r\n\r\n", path, domain, dataLen, data);
+    char* pData = retBuffer;
+    Trace(1,"Package: %s", pData);
+
+    error = SSL_Init(&config);
+    if(error != SSL_ERROR_NONE){
+        Trace(1,"ssl init error:%d",error);
+        return -1;
+    }
+
+    error = SSL_Connect(&config, SERVER_IP, SSL_SERVER_PORT);
+    if(error != SSL_ERROR_NONE){
+        Trace(1,"ssl connect error:%d",error);
+        Trace(1,"ssl destroy");
+        SSL_Destroy(&config);
+        return -1;
+    }
+
+    for(int i=0; i<2; i++){
+        Trace(1,"count:%d  write len:%d data:%s",i,strlen(pData),pData);
+        ret = SSL_Write(&config, pData, strlen(pData),5000);
+        if(ret <= 0){
+            error = ret;
+            Trace(1,"ssl write fail:%d",error);
+            Trace(1,"ssl close");
+            SSL_Close(&config);
+            return -1;
+        }
+
+        memset(buffer,0,sizeof(buffer));
+        ret = SSL_Read(&config, buffer, strlen(pData), 2000);
+        if(ret <= 0){
+            error = ret;
+            Trace(1,"ssl read fail:%d",error);
+            Trace(1,"ssl close");
+            SSL_Close(&config);
+            return -1;
+        }
+        Trace(1,"read len:%d, data:%s",ret,buffer);
+    }
+
+    SSL_Close(&config);
+    return 0;
+}
+
+
+void Socket_BIO_Test(){
     char buffer[2048];
     int len = sizeof(buffer);
     //wait for gprs network connection ok
@@ -224,11 +299,11 @@ void Socket_BIO_Test()
     OS_DeleteSemaphore(semStart);
 
     //perform http get
-    if(Https_Get(SERVER_IP,SERVER_PORT,SERVER_PATH,buffer,&len) < 0){
+    //if(Https_Get(SERVER_IP,SERVER_PORT,SERVER_PATH,buffer,&len) < 0){
+    if(Https_Post(SERVER_IP, SERVER_PORT, SERVER_PATH_POST, SERVER_DATA, 19, buffer, &len) < 0){
         Trace(1,"http get fail");
     }
-    else
-    {
+    else{
         //show response message though tracer(pay attention:tracer can not show all the word if the body too long)
         Trace(1,"http get success,ret:%s",buffer);
         char* index0 = strstr(buffer,"\r\n\r\n");
