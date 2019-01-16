@@ -1,13 +1,12 @@
 /*
- * @File  demo_socketHttps.c
- * @Brief HTTPs connection with chip A9G
+ * @File  demo_httpsConnection.c
+ * @Brief HTTPs connection with chip A9G. POST and GET functions.
  * 
  * @Author: Ricx8 
  * @Date: 2019-01-10 23:27:26 
  * @Last Modified by: Ricx8
- * @Last Modified time: 2019-01-15 02:09:20
+ * @Last Modified time: 2019-01-16 01:38:55
  */
-
 
 #include <string.h>
 #include <stdio.h>
@@ -20,14 +19,15 @@
 
 /*******************************************************************/
 /////////////////////////socket configuration////////////////////////
-#define SERVER_IP           "caracascoder.com"
-#define SERVER_PORT         443
-#define SSL_SERVER_PORT     "443"
-#define SERVER_PATH         "/test/setLocation.php?location=A9G:443_v17"
-#define SERVER_PATH_POST    "/test/setLocationPOST.php"
-#define SERVER_DATA         "\r\nlocation=A9G_POST_v17"
+#define SERVER_IP           "caracascoder.com" // Replace this with the host to connect
+#define SERVER_PORT         443     // Replace this with the port to connect
+#define SSL_SERVER_PORT     "443"   // Replace this with the port to connect
+#define SERVER_PATH         "/test/setLocation.php?location=A9G:443_v23" // [GET] Replace this with your path
+#define SERVER_PATH_POST    "/test/setLocationPOST.php" // [POST] Replace this with your path
+#define SERVER_DATA         "\r\nlocation=A9G_POST_v23" // [POST] Replace this with POST data
 /*******************************************************************/
 
+// Replace the next certificate with the certificate of the page you will connet to.
 const char* ca_cert = "-----BEGIN CERTIFICATE-----\n\
 MIIFbDCCBFSgAwIBAgISA0gXQ0cnsv7p31+BZWAULSL1MA0GCSqGSIb3DQEBCwUA\n\
 MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQD\n\
@@ -113,7 +113,7 @@ void EventDispatch(API_Event_t* pEvent)
             else
             {
                 Network_PDP_Context_t context = {
-                    .apn        ="wholesale",
+                    .apn        ="wholesale", // Replace this with your APN name
                     .userName   = ""    ,
                     .userPasswd = ""
                 };
@@ -124,7 +124,7 @@ void EventDispatch(API_Event_t* pEvent)
         case API_EVENT_ID_NETWORK_ATTACHED:
             Trace(2,"network attach success");
             Network_PDP_Context_t context = {
-                .apn        ="wholesale",
+                .apn        ="wholesale", // Replace this with your APN name
                 .userName   = ""    ,
                 .userPasswd = ""
             };
@@ -162,16 +162,16 @@ int Https_Get(const char* domain, int port,const char* path, char* retBuffer, in
         .entropyCustom = "GPRS"
     };
 
-
-    //connect server
+    // Get ip from DNS server.
     memset(ip,0,sizeof(ip));
     if(DNS_GetHostByName2(domain,ip) != 0){
         Trace(1,"get ip error");
         return -1;
     }
     Trace(1,"get ip success:%s -> %s",domain,ip);
-    char* servInetAddr = ip;
-    snprintf(retBuffer,retBufferLen,"GET %s HTTP/1.1\r\nHost: %s\r\n\r\n",path,domain);
+
+    // Build the package
+    snprintf(retBuffer,retBufferLen,"GET %s HTTP/1.1\r\nHost: %s\r\n\r\n", path, domain);
     char* pData = retBuffer;
 
     error = SSL_Init(&config);
@@ -180,6 +180,7 @@ int Https_Get(const char* domain, int port,const char* path, char* retBuffer, in
         return -1;
     }
 
+    // Connect to server
     error = SSL_Connect(&config, SERVER_IP, SSL_SERVER_PORT);
     if(error != SSL_ERROR_NONE){
         Trace(1,"ssl connect error:%d",error);
@@ -188,28 +189,28 @@ int Https_Get(const char* domain, int port,const char* path, char* retBuffer, in
         return -1;
     }
 
-    for(int i=0; i<2; i++){
-        Trace(1,"count:%d  write len:%d data:%s",i,strlen(pData),pData);
-        ret = SSL_Write(&config, pData, strlen(pData),5000);
-        if(ret <= 0){
-            error = ret;
-            Trace(1,"ssl write fail:%d",error);
-            Trace(1,"ssl close");
-            SSL_Close(&config);
-            return -1;
-        }
-
-        memset(buffer,0,sizeof(buffer));
-        ret = SSL_Read(&config, buffer, strlen(pData), 2000);
-        if(ret <= 0){
-            error = ret;
-            Trace(1,"ssl read fail:%d",error);
-            Trace(1,"ssl close");
-            SSL_Close(&config);
-            return -1;
-        }
-        Trace(1,"read len:%d, data:%s",ret,buffer);
+    // Send package
+    Trace(1,"write len:%d data:%s" ,strlen(pData),pData);
+    ret = SSL_Write(&config, pData, strlen(pData),5000);
+    if(ret <= 0){
+        error = ret;
+        Trace(1,"ssl write fail:%d",error);
+        Trace(1,"ssl close");
+        SSL_Close(&config);
+        return -1;
     }
+
+    // Read response
+    memset(buffer,0,sizeof(buffer));
+    ret = SSL_Read(&config, buffer, strlen(pData), 2000);
+    if(ret <= 0){
+        error = ret;
+        Trace(1,"ssl read fail:%d",error);
+        Trace(1,"ssl close");
+        SSL_Close(&config);
+        return -1;
+    }
+    Trace(1,"read len:%d, data:%s",ret,buffer);
 
     SSL_Close(&config);
     return 0;
@@ -231,11 +232,11 @@ int Https_Post(const char* domain, int port,const char* path, const char* data, 
         .hostName   = SERVER_IP,
         .minVersion = SSL_VERSION_SSLv3,
         .maxVersion = SSL_VERSION_TLSv1_2,
-        .verifyMode = SSL_VERIFY_MODE_OPTIONAL,
+        .verifyMode = SSL_VERIFY_MODE_OPTIONAL, // SSL_VERIFY_MODE_REQUIRED
         .entropyCustom = "GPRS"
     };
 
-    //connect server
+    // Get ip from DNS server.
     memset(ip,0,sizeof(ip));
     if(DNS_GetHostByName2(domain,ip) != 0){
         Trace(1,"get ip error");
@@ -243,7 +244,7 @@ int Https_Post(const char* domain, int port,const char* path, const char* data, 
     }
     Trace(1,"get ip success:%s -> %s",domain,ip);
 
-    char* servInetAddr = ip;
+    // Build the package
     snprintf(retBuffer,retBufferLen,"POST %s HTTP/1.1\r\nHost: %s\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\n%s\r\n\r\n", path, domain, dataLen, data);
     char* pData = retBuffer;
     Trace(1,"Package: %s", pData);
@@ -254,6 +255,7 @@ int Https_Post(const char* domain, int port,const char* path, const char* data, 
         return -1;
     }
 
+    // Connect to server
     error = SSL_Connect(&config, SERVER_IP, SSL_SERVER_PORT);
     if(error != SSL_ERROR_NONE){
         Trace(1,"ssl connect error:%d",error);
@@ -262,28 +264,28 @@ int Https_Post(const char* domain, int port,const char* path, const char* data, 
         return -1;
     }
 
-    for(int i=0; i<2; i++){
-        Trace(1,"count:%d  write len:%d data:%s",i,strlen(pData),pData);
-        ret = SSL_Write(&config, pData, strlen(pData),5000);
-        if(ret <= 0){
-            error = ret;
-            Trace(1,"ssl write fail:%d",error);
-            Trace(1,"ssl close");
-            SSL_Close(&config);
-            return -1;
-        }
-
-        memset(buffer,0,sizeof(buffer));
-        ret = SSL_Read(&config, buffer, strlen(pData), 2000);
-        if(ret <= 0){
-            error = ret;
-            Trace(1,"ssl read fail:%d",error);
-            Trace(1,"ssl close");
-            SSL_Close(&config);
-            return -1;
-        }
-        Trace(1,"read len:%d, data:%s",ret,buffer);
+    // Send package
+    Trace(1,"Write len:%d data:%s", strlen(pData), pData);
+    ret = SSL_Write(&config, pData, strlen(pData),5000);
+    if(ret <= 0){
+        error = ret;
+        Trace(1,"ssl write fail:%d",error);
+        Trace(1,"ssl close");
+        SSL_Close(&config);
+        return -1;
     }
+
+    // Read response
+    memset(buffer,0,sizeof(buffer));
+    ret = SSL_Read(&config, buffer, strlen(pData), 2000);
+    if(ret <= 0){
+        error = ret;
+        Trace(1,"ssl read fail:%d",error);
+        Trace(1,"ssl close");
+        SSL_Close(&config);
+        return -1;
+    }
+    Trace(1,"read len:%d, data:%s",ret,buffer);
 
     SSL_Close(&config);
     return 0;
@@ -300,7 +302,7 @@ void Socket_BIO_Test(){
 
     //perform http get
     //if(Https_Get(SERVER_IP,SERVER_PORT,SERVER_PATH,buffer,&len) < 0){
-    if(Https_Post(SERVER_IP, SERVER_PORT, SERVER_PATH_POST, SERVER_DATA, 19, buffer, &len) < 0){
+    if(Https_Post(SERVER_IP, SERVER_PORT, SERVER_PATH_POST, SERVER_DATA, 21, buffer, &len) < 0){
         Trace(1,"http get fail");
     }
     else{
@@ -353,7 +355,7 @@ void socket_MainTask(void *pData)
     }
 }
 
-void socketHttps_Main()
+void httpsConnection_Main()
 {
     socketTaskHandle = OS_CreateTask(socket_MainTask,
         NULL, NULL, MAIN_TASK_STACK_SIZE, MAIN_TASK_PRIORITY, 0, 0, MAIN_TASK_NAME);
