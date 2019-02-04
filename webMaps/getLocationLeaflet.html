@@ -36,6 +36,13 @@
 			    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 			}).addTo(map);
 			L.marker([40.660302, -73.866782]).addTo(map);
+
+			// Openstreetmap
+			var map02 = L.map('map02').setView([40.660302, -73.866782], 13);
+			L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}{r}.png', {
+			    attribution: '© OpenStreetMap contributors'
+			}).addTo(map02);
+			L.marker([40.660302, -73.866782]).addTo(map02);
 		</script>
 	</body>
 </html>
