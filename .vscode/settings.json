@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "rust_simple_examples/algebra_with_ndarray/Cargo.toml"
+    ]
+}
