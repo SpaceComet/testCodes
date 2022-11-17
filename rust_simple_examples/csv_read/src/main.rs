@@ -1,12 +1,12 @@
 fn main() {
     // File Reader.
     // csv file from https://www.kaggle.com/datasets/harlfoxem/housesalesprediction
-    let mut csv_file = csv::Reader::from_path("kc_house_data_sm.csv").expect("Error reading the file.");
+    let mut csv_file = csv::Reader::from_path("../../shared_data/kc_house_data_sm_mod.csv").expect("Error reading the file.");
 
     // Another way to declare the file reader.
     let mut _csv_file = csv::ReaderBuilder::new()
         .has_headers(true)
-        .from_path("kc_house_data_sm.csv")
+        .from_path("../../shared_data/kc_house_data_sm_mod.csv")
         .expect("Error reading the file.");
 
     // Iterate through all the lines/rows in the file.
