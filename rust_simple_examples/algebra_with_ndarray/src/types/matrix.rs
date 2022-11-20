@@ -112,8 +112,14 @@ pub fn print_matrix_dot_product(){
 pub fn print_matrix_transpose(){
     let ma = array![[1, 2, 3], [4, 5, 6]];
  
-    println!("--------");
-    println!("{}", &ma.reversed_axes());
+    println!("---- transpose ----");
+    // self.view().reversed_axes()
+    println!("{}", &ma.t());                // Returns like a copy of the matrix transpose.
+    println!("{}", &ma.reversed_axes());    // move the ownership of the matrix when returned.
+
+    // this will panic because `reversed_axes` moved the ownership 
+    // and it was destroyed on the precious line.
+    //println!("{}", &ma);
     println!("--------\n");
 }
 
