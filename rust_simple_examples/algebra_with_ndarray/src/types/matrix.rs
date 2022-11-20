@@ -108,3 +108,40 @@ pub fn print_matrix_dot_product(){
     //println!("{}", &v.dot(&ma));
     println!("--------\n");
 }
+
+pub fn print_matrix_transpose(){
+    let ma = array![[1, 2, 3], [4, 5, 6]];
+ 
+    println!("--------");
+    println!("{}", &ma.reversed_axes());
+    println!("--------\n");
+}
+
+pub fn print_matrix_info(){
+    let ma = array![[1, 2, 3], [4, 5, 6]];
+ 
+    println!("--------");
+    println!("{:?}", &ma.dim()); // check `shape`
+    println!("{:?}", &ma.len());
+    println!("{:?}", &ma.ndim());
+    println!("--------\n");
+}
+
+pub fn print_matrix_index(){
+    let v = array![1, 2, 3, 4, 5, 6, 7, 8];
+    let m2 = array![[1, 2, 3], [4, 5, 6]];
+    let m3 = array![[[1, 2, 20], [3, 4, 40]], [[5, 6, 60], [7, 8, 80]]];
+    
+    println!("----1D----"); 
+    println!("&v[3] {:?}", &v[3]);              // Get the value at pos 3
+    println!("{:?}", &v.slice(s![2..5]));       // Get the value from pos 2 to pos 5
+
+    println!("----2D----");
+    println!("&m2[[0, 0] {:?}", &m2[[0, 0]]);   // Get the value at pos (0, 0)
+    println!("&m2[[1, 2] {:?}", &m2[[1, 2]]);   // Get the value at pos (1, 2)
+    println!("{:?}", &m2.slice(s![.., ..2]));   // Get the first two columns of each row
+
+    println!("----3D----");
+    println!("&m3[[1, 0, 2] {:?}", &m3[[1, 0, 2]]); // Get the value at pos (1, 0, 2)
+    println!("{:?}", &m3.slice(s![1, .., ..]));     
+}

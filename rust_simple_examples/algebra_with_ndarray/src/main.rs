@@ -10,4 +10,8 @@ fn main() {
     types::matrix::print_matrix_addition();
     types::matrix::print_matrix_scalar_mul_div();
     types::matrix::print_matrix_dot_product();
+    types::matrix::print_matrix_transpose();
+
+    types::matrix::print_matrix_info();
+    types::matrix::print_matrix_index();
 }
