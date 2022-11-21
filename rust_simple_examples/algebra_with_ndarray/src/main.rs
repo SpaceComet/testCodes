@@ -14,4 +14,5 @@ fn main() {
 
     types::matrix::print_matrix_info();
     types::matrix::print_matrix_index();
+    types::matrix::print_matrix_manipulation();
 }

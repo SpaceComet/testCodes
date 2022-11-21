@@ -151,3 +151,34 @@ pub fn print_matrix_index(){
     println!("&m3[[1, 0, 2] {:?}", &m3[[1, 0, 2]]); // Get the value at pos (1, 0, 2)
     println!("{:?}", &m3.slice(s![1, .., ..]));     
 }
+
+pub fn print_matrix_manipulation(){
+    println!("---- Matrix Manipulation ----");
+    
+    let m3 = array![[[1, 2, 20], [3, 4, 40]], [[5, 6, 60], [7, 8, 80]]];
+    let mut m_ones = Array::<i32, _>::ones((2, 2, 3));
+    println!("m3: {}\n", &m3);
+    println!("m_ones: {}\n", &m_ones);
+
+    println!("\nCreate a new vector from a section of a matrix.");
+    let v = m3.slice(s![0, 0, ..]);
+    println!("v: {}", &v);
+    
+    println!("\nAssign new vector from a section of another vector.");
+    let mut vv = v.slice(s![..2]);
+    println!("vv: {}", &vv);
+
+    println!("\nAssign a section of a matrix to a vector.");
+    vv = m3.slice(s![1, 0, ..]);
+    println!("vv: {}", &vv);
+
+    println!("\nCopy data from a matrix to another matrix");
+    m_ones.assign(&m3);
+    println!("m_ones: {}\n", &m_ones);
+
+    let mm = array![[1, 2, 30], [3, 4, 50]];
+    let mmm = arr2(&[[1, 2, 30]]);
+    println!(": {:?}", concatenate(Axis(0), &[mm.view(), mmm.view()]));
+
+    println!("--------\n");
+}
