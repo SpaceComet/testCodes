@@ -99,10 +99,12 @@ pub fn print_matrix_scalar_mul_div(){
 
 pub fn print_matrix_dot_product(){
     let v = arr1(&[1, 2]);
+    //let vv= vec![1, 2];
     let ma = array![[10, 2], [30, 4], [50, 6]];
 
     println!("--------");
     println!("{}", &ma.dot(&v));
+    //println!("{}", &ma.dot(&vv));
     
     // the next is not valid and it will panic
     //println!("{}", &v.dot(&ma));
@@ -176,9 +178,30 @@ pub fn print_matrix_manipulation(){
     m_ones.assign(&m3);
     println!("m_ones: {}\n", &m_ones);
 
+    println!("\nConcatenate two matrices");
     let mm = array![[1, 2, 30], [3, 4, 50]];
     let mmm = arr2(&[[1, 2, 30]]);
     println!(": {:?}", concatenate(Axis(0), &[mm.view(), mmm.view()]));
 
+    println!("\n Stack two arrays along a new axis");
+    let vec01 = arr1(&[1, 2, 3]);
+    let vec02 = arr1(&[4, 5, 6]);
+    println!(": {:?}", stack!(Axis(0), vec01, vec02));
+    println!("\n: {:?}", stack!(Axis(1), vec01, vec02));
+
     println!("--------\n");
+}
+
+pub fn print_matrix_iteration(){
+    println!("---- Matrix Iteration ----");
+    let vec01 = arr1(&[1, 2, 3]);
+    let vec02 = arr1(&[4, 5, 6]);
+    println!(": {:?}", stack!(Axis(0), vec01, vec02));
+    println!(": {:?}", stack!(Axis(1), vec01, vec02));
+
+    let test = stack!(Axis(1), vec01, vec02);
+    for i in test.axis_iter(Axis(0)).map(|p| (p[0], p[1])){
+        println!("{:?}", i);
+    }
+
 }
