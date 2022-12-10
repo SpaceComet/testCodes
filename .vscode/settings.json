@@ -2,6 +2,7 @@
     "rust-analyzer.linkedProjects": [
         "rust_simple_examples/algebra_with_ndarray/Cargo.toml",
         "rust_simple_examples/plot_test/Cargo.toml",
-        "rust_simple_examples/csv_read/Cargo.toml"
+        "rust_simple_examples/csv_read/Cargo.toml",
+        "rust_simple_examples/ndarray_benchmark/Cargo.toml"
     ]
 }
