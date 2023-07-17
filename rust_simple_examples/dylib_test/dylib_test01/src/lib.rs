@@ -1,16 +1,25 @@
 // `no_mangle` ensures the function name remains the same
 // after compiled into a DLL
 #[no_mangle]
-pub extern "C" fn hello() {
+pub fn hello() {
     println!("Hello from DLL");
 }
 
 #[no_mangle]
-pub extern "C" fn returns_number() -> i32 {
+pub fn returns_number() -> i32 {
     8080
 }
 
 #[no_mangle]
-pub extern "C" fn square(num: i32) -> i32 {
+pub fn square(num: i32) -> i32 {
     num * num
+}
+
+#[no_mangle]
+pub fn option_r(a: i32, b: i32) -> Result<i32, String> {
+    if b != 0 {
+        Ok(a / b)
+    } else {
+        Err("Error".to_string())
+    }
 }
