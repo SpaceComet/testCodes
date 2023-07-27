@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use axum::extract::Query;
+use axum::extract::{Path, Query};
 use axum::{response::Json, routing::get, Router};
 use serde_json::{json, Value};
 
@@ -9,7 +9,9 @@ async fn main() {
     let app = Router::new()
         .route("/plain_text", get(plain_text))
         .route("/json", get(json))
-        .route("/say_hello_to", get(say_hello_to));
+        .route("/say_hello_to", get(say_hello_to))
+        .route("/:version/*path", get(extract_path))
+        .route("/test/test/test", get(plain_text));
 
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
         .serve(app.into_make_service())
@@ -38,4 +40,9 @@ async fn say_hello_to(Query(params): Query<HashMap<String, String>>) -> String {
     } else {
         "Please type a name".to_string()
     }
+}
+
+// Path extractor. Plain text response.
+async fn extract_path(Path((version, api_path)): Path<(String, String)>) -> String {
+    format!("version: {}, \npath: {}", version, api_path)
 }
