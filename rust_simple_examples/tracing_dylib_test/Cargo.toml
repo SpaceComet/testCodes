@@ -1,0 +1,13 @@
+[package]
+name = "tracing_dylib_test"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "tracing_dylib_test"
+crate-type = ["dylib"]
+
+[dependencies]
+libloading = "0.8.0"
+tracing = "0.1.37"
+tracing-subscriber = "0.3.17"
