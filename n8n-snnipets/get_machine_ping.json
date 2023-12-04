@@ -1,0 +1,211 @@
+{
+  "name": "test01-api",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ping",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "beaa62cc-0cb4-420e-8939-adaeb0688d93",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        740,
+        420
+      ],
+      "webhookId": "83739be2-7cc2-437c-a9e9-fdca1de46a2e"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{JSON.stringify($json)}}",
+        "options": {}
+      },
+      "id": "36cc7984-611f-4e5b-9915-95676818d4fb",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        420
+      ],
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "fileSelector": "/files/machines-test.txt"
+      },
+      "id": "b3a712c2-b75f-4858-a539-9a2409acafb8",
+      "name": "Read File",
+      "type": "n8n-nodes-base.readBinaryFiles",
+      "typeVersion": 1,
+      "position": [
+        940,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "fileFormat": "csv",
+        "options": {
+          "headerRow": false,
+          "rawData": true,
+          "readAsString": true
+        }
+      },
+      "id": "536c7729-f356-4e9c-9c6a-99bbca855538",
+      "name": "Convert to CSV",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "executeOnce": false,
+        "command": "=machine=\"{{ $json.row[0] }}\"\nif ping -c 1 \"$machine\" > /dev/null 2>&1; then \n  echo \"$machine,1\"\nelse\n  echo \"$machine,0\"\nfi"
+      },
+      "id": "60cb8d38-6be0-4b38-95d3-16da5f70eafe",
+      "name": "Ping Machine List",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "=machine",
+              "stringValue": "={{ $json.stdout.split(\",\")[0] }}"
+            },
+            {
+              "name": "ping",
+              "type": "booleanValue",
+              "booleanValue": "={{ $json.stdout.split(\",\")[1] }}"
+            }
+          ]
+        },
+        "include": "selected",
+        "includeFields": "machine,ping",
+        "options": {}
+      },
+      "id": "d0de9e07-36d5-4035-861c-d91cb865a815",
+      "name": "Create Columns",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        1580,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "concatenateItems",
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "e99bd7b9-e53e-417e-a7e0-1f432b818c00",
+      "name": "Concatenate Items",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3.1,
+      "position": [
+        1800,
+        420
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read File": {
+      "main": [
+        [
+          {
+            "node": "Convert to CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to CSV": {
+      "main": [
+        [
+          {
+            "node": "Ping Machine List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ping Machine List": {
+      "main": [
+        [
+          {
+            "node": "Create Columns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Columns": {
+      "main": [
+        [
+          {
+            "node": "Concatenate Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Concatenate Items": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "aa801f59-b79b-44b1-afc3-5ba0c460a583",
+  "id": "PgD621bJw6QZn34L",
+  "meta": {
+    "instanceId": "08ab87dce4afc6d46d1a68937fd941c468a669c3651da9a5b3425c43c4a5be09"
+  },
+  "tags": [
+    {
+      "name": "webhooks",
+      "id": "PMCQbI63W6s30pAW",
+      "createdAt": "2023-12-04T04:06:00.124Z",
+      "updatedAt": "2023-12-04T04:06:00.124Z"
+    }
+  ]
+}
