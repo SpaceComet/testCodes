@@ -9,6 +9,7 @@ import {
   Revenue,
 } from './definitions';
 import { formatCurrency } from './utils';
+import conn from '../lib/db'
 
 export async function fetchRevenue() {
   // Add noStore() here to prevent the response from being cached.
@@ -21,7 +22,8 @@ export async function fetchRevenue() {
     // console.log('Fetching revenue data...');
     // await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    const data = await sql<Revenue>`SELECT * FROM revenue`;
+    // const data = await sql<Revenue>`SELECT * FROM revenue`;
+    const data = await conn.query<Revenue>('SELECT * FROM revenue');
 
     // console.log('Data fetch completed after 3 seconds.');
 
